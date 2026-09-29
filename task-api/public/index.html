@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskForge Dashboard</title>
+  <style>
+    /* ── Reset & Tokens ───────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3250;
+      --accent:    #6c63ff;
+      --accent2:   #a78bfa;
+      --green:     #34d399;
+      --yellow:    #fbbf24;
+      --red:       #f87171;
+      --blue:      #60a5fa;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --radius:    10px;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ───────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #12142a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.3px; }
+    .logo span { color: var(--accent2); }
+
+    .header-meta { font-size: 0.8rem; color: var(--muted); }
+
+    #refresh-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    #refresh-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+    /* ── Layout ───────────────────────────────────────── */
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    section { margin-bottom: 36px; }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Stats Cards ──────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .stat-card.todo::before    { background: var(--blue); }
+    .stat-card.in_progress::before { background: var(--yellow); }
+    .stat-card.done::before    { background: var(--green); }
+    .stat-card.overdue::before { background: var(--red); }
+    .stat-card.low::before     { background: #64748b; }
+    .stat-card.medium::before  { background: var(--yellow); }
+    .stat-card.high::before    { background: var(--red); }
+
+    .stat-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+    .stat-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .stat-card.overdue .stat-value { color: var(--red); }
+
+    /* ── Create Form ──────────────────────────────────── */
+    .create-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field label { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+
+    input, select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 7px;
+      font-size: 0.875rem;
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+    select option { background: var(--surface2); }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 7px;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: #fff;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ── Task List ────────────────────────────────────── */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      transition: border-color 0.15s, transform 0.15s;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .task-card:hover { border-color: var(--border); transform: translateX(2px); }
+    .task-card.done-card { opacity: 0.55; }
+
+    .task-main { display: flex; flex-direction: column; gap: 5px; }
+
+    .task-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .done-card .task-title { text-decoration: line-through; color: var(--muted); }
+
+    .task-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-todo        { background: rgba(96,165,250,0.15); color: var(--blue); }
+    .badge-in_progress { background: rgba(251,191,36,0.15); color: var(--yellow); }
+    .badge-done        { background: rgba(52,211,153,0.15); color: var(--green); }
+    .badge-low    { background: rgba(100,116,139,0.15); color: #94a3b8; }
+    .badge-medium { background: rgba(251,191,36,0.12); color: var(--yellow); }
+    .badge-high   { background: rgba(248,113,113,0.15); color: var(--red); }
+
+    .task-meta .sep { color: var(--border); }
+    .task-date { font-size: 0.75rem; color: var(--muted); }
+    .task-date.overdue { color: var(--red); font-weight: 500; }
+    .task-assignee { font-size: 0.75rem; color: var(--muted); }
+    .task-assignee span { color: var(--accent2); }
+
+    .complete-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .complete-btn:hover:not(:disabled) {
+      background: rgba(52,211,153,0.1);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .complete-btn:disabled { opacity: 0.3; cursor: default; }
+
+    /* ── Empty / Error States ─────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+    .empty-state .empty-icon { font-size: 2rem; margin-bottom: 10px; }
+    .empty-state p { font-size: 0.875rem; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      color: var(--text);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 999;
+      animation: toastIn 0.25s ease;
+      max-width: 320px;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.error   { border-color: var(--red);   color: var(--red); }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading-bar {
+      position: fixed; top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0;
+      transition: width 0.3s ease;
+      z-index: 9999;
+    }
+
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading-bar"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <h1>Task<span>Forge</span></h1>
+  </div>
+  <span class="header-meta" id="last-updated">Loading…</span>
+  <button id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+</header>
+
+<main>
+
+  <!-- Stats -->
+  <section id="stats-section">
+    <div class="section-title">Overview</div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Loading</div><div class="stat-value"><span class="spinner"></span></div></div>
+    </div>
+  </section>
+
+  <!-- Create Task -->
+  <section>
+    <div class="section-title">Create Task</div>
+    <div class="create-form">
+      <form id="create-form" onsubmit="handleCreate(event)">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="title-input">Title</label>
+            <input id="title-input" type="text" placeholder="What needs to be done?" required autocomplete="off" />
+          </div>
+          <div class="form-field">
+            <label for="priority-select">Priority</label>
+            <select id="priority-select">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="status-select">Status</label>
+            <select id="status-select">
+              <option value="todo" selected>Todo</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>&nbsp;</label>
+            <button type="submit" class="btn btn-primary" id="create-btn">+ Add Task</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Task List -->
+  <section>
+    <div class="section-title" id="tasks-label">Tasks</div>
+    <div id="task-list-container">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <p>Loading tasks…</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const API = '';  // same origin
+
+  // ── Utilities ──────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  function setLoading(on) {
+    const bar = document.getElementById('loading-bar');
+    bar.style.width = on ? '70%' : '100%';
+    if (!on) setTimeout(() => { bar.style.width = '0'; }, 300);
+  }
+
+  function formatDate(iso) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function isOverdue(iso, status) {
+    if (!iso || status === 'done') return false;
+    return new Date(iso) < new Date();
+  }
+
+  // ── Stats ──────────────────────────────────────────────
+  async function loadStats() {
+    const res = await fetch(`${API}/tasks/stats`);
+    const s = await res.json();
+    const grid = document.getElementById('stats-grid');
+
+    const statusCards = [
+      { key: 'todo',        label: 'Todo',        cls: 'todo' },
+      { key: 'in_progress', label: 'In Progress', cls: 'in_progress' },
+      { key: 'done',        label: 'Done',        cls: 'done' },
+      { key: 'overdue',     label: 'Overdue',     cls: 'overdue' },
+    ];
+
+    let html = statusCards.map(c => `
+      <div class="stat-card ${c.cls}">
+        <div class="stat-label">${c.label}</div>
+        <div class="stat-value">${s[c.key] ?? 0}</div>
+      </div>
+    `).join('');
+
+    if (s.byPriority) {
+      html += ['low','medium','high'].map(p => `
+        <div class="stat-card ${p}">
+          <div class="stat-label">${p.charAt(0).toUpperCase() + p.slice(1)} Priority</div>
+          <div class="stat-value">${s.byPriority[p] ?? 0}</div>
+        </div>
+      `).join('');
+    }
+
+    grid.innerHTML = html;
+  }
+
+  // ── Tasks ──────────────────────────────────────────────
+  async function loadTasks() {
+    const res = await fetch(`${API}/tasks`);
+    const tasks = await res.json();
+
+    const label = document.getElementById('tasks-label');
+    const container = document.getElementById('task-list-container');
+
+    label.textContent = `Tasks (${tasks.length})`;
+
+    if (!tasks.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p>No tasks yet. Create one above!</p>
+        </div>`;
+      return;
+    }
+
+    const sorted = [...tasks].sort((a, b) => {
+      const order = { high: 0, medium: 1, low: 2 };
+      if (order[a.priority] !== order[b.priority]) return order[a.priority] - order[b.priority];
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+
+    container.innerHTML = `<div class="task-list">${sorted.map(t => taskCard(t)).join('')}</div>`;
+  }
+
+  function taskCard(t) {
+    const overdue  = isOverdue(t.dueDate, t.status);
+    const dateStr  = t.dueDate ? `<span class="task-date${overdue ? ' overdue' : ''}">${overdue ? '⚠ ' : ''}Due ${formatDate(t.dueDate)}</span>` : '';
+    const assignee = t.assignee ? `<span class="task-assignee">→ <span>${t.assignee}</span></span>` : '';
+    const isDone   = t.status === 'done';
+
+    return `
+      <div class="task-card${isDone ? ' done-card' : ''}" id="task-${t.id}">
+        <div class="task-main">
+          <div class="task-title">${escHtml(t.title)}</div>
+          <div class="task-meta">
+            <span class="badge badge-${t.status}">${t.status.replace('_', ' ')}</span>
+            <span class="badge badge-${t.priority}">${t.priority}</span>
+            ${dateStr}
+            ${assignee}
+          </div>
+        </div>
+        <button
+          class="complete-btn"
+          title="${isDone ? 'Already complete' : 'Mark complete'}"
+          onclick="markComplete('${t.id}')"
+          ${isDone ? 'disabled' : ''}>
+          ${isDone ? '✓' : '○'}
+        </button>
+      </div>`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Actions ────────────────────────────────────────────
+  async function handleCreate(e) {
+    e.preventDefault();
+    const btn = document.getElementById('create-btn');
+    const title = document.getElementById('title-input').value.trim();
+    const priority = document.getElementById('priority-select').value;
+    const status   = document.getElementById('status-select').value;
+    if (!title) return;
+
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    try {
+      const res = await fetch(`${API}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, priority, status }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+      document.getElementById('title-input').value = '';
+      showToast('Task created ✓');
+      await loadAll();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '+ Add Task';
+    }
+  }
+
+  async function markComplete(id) {
+    const btn = document.querySelector(`#task-${id} .complete-btn`);
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+    try {
+      const res = await fetch(`${API}/tasks/${id}/complete`, { method: 'PATCH' });
+      if (!res.ok) throw new Error((await res.json()).error || 'Failed');
+      showToast('Marked complete ✓');
+      await loadAll();
+    } catch (err) {
+      showToast(err.message, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '○'; }
+    }
+  }
+
+  // ── Bootstrap ──────────────────────────────────────────
+  async function loadAll() {
+    setLoading(true);
+    try {
+      await Promise.all([loadStats(), loadTasks()]);
+      document.getElementById('last-updated').textContent =
+        'Updated ' + new Date().toLocaleTimeString();
+    } catch (err) {
+      showToast('Could not reach API — is the server running?', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadAll();
+</script>
+</body>
+</html>

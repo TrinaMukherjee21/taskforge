@@ -71,23 +71,39 @@ describe('Task Service Unit Tests', () => {
 
       // BUG-2: FIXED
     it('page 1 returns the first limit items', () => {
-      const page1 = taskService.getPaginated(1, 10);
-      expect(page1).toHaveLength(10);
-      expect(page1[0].title).toBe('Task 1');
-      expect(page1[9].title).toBe('Task 10');
+      const result = taskService.getPaginated(1, 10);
+      expect(result.data).toHaveLength(10);
+      expect(result.data[0].title).toBe('Task 1');
+      expect(result.data[9].title).toBe('Task 10');
     });
 
     // BUG-2: FIXED
     it('page 2 returns the next limit items', () => {
-      const page2 = taskService.getPaginated(2, 10);
-      expect(page2).toHaveLength(10);
-      expect(page2[0].title).toBe('Task 11');
-      expect(page2[9].title).toBe('Task 20');
+      const result = taskService.getPaginated(2, 10);
+      expect(result.data).toHaveLength(10);
+      expect(result.data[0].title).toBe('Task 11');
+      expect(result.data[9].title).toBe('Task 20');
     });
 
-    it('page beyond the end returns empty array', () => {
-      const page4 = taskService.getPaginated(4, 10);
-      expect(page4).toHaveLength(0);
+    it('page beyond the end returns empty data array', () => {
+      const result = taskService.getPaginated(4, 10);
+      expect(result.data).toHaveLength(0);
+    });
+
+    // Bonus: pagination metadata
+    it('returns correct pagination metadata', () => {
+      const result = taskService.getPaginated(1, 10);
+      expect(result.total).toBe(25);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+      expect(result.totalPages).toBe(3);
+    });
+
+    it('metadata is accurate for last partial page', () => {
+      const result = taskService.getPaginated(3, 10);
+      expect(result.data).toHaveLength(5); // items 21-25
+      expect(result.total).toBe(25);
+      expect(result.totalPages).toBe(3);
     });
   });
 
@@ -121,6 +137,24 @@ describe('Task Service Unit Tests', () => {
         taskService.create({ title: 'No due date', status: 'todo' });
         const stats = taskService.getStats();
         expect(stats.overdue).toBe(0);
+    });
+
+    // Bonus: priority breakdown
+    it('returns byPriority breakdown', () => {
+      taskService.create({ title: 'Low task', priority: 'low' });
+      taskService.create({ title: 'Medium task', priority: 'medium' });
+      taskService.create({ title: 'High task 1', priority: 'high' });
+      taskService.create({ title: 'High task 2', priority: 'high' });
+
+      const stats = taskService.getStats();
+      expect(stats.byPriority.low).toBe(1);
+      expect(stats.byPriority.medium).toBe(1);
+      expect(stats.byPriority.high).toBe(2);
+    });
+
+    it('returns zero byPriority counts when store is empty', () => {
+      const stats = taskService.getStats();
+      expect(stats.byPriority).toEqual({ low: 0, medium: 0, high: 0 });
     });
   });
 

@@ -46,7 +46,7 @@ Fix is one line: remove `priority: 'medium'` from the update payload.
 - **Discovered by**: Integration Test: `respects both status and pagination when combined`
 - **Suggested Fix**: Apply pagination to the filtered result array instead of returning early, or combine filtering and pagination in the service layer.
 
-## BUG-7: Malformed JSON Triggers 500 Error
+## BUG-6: Malformed JSON Triggers 500 Error
 - **Severity**: Medium
 - **Location**: `task-api/src/app.js`, Express Error Handler Middleware (Line 11)
 - **Root Cause**: `express.json()` throws a `SyntaxError` when parsing invalid JSON bodies. The generic error handler catches this and unconditionally emits a 500 status code.

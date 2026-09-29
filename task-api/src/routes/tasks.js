@@ -21,8 +21,8 @@ router.get('/', (req, res) => {
     let limitNum = parseInt(limit) || 10;
     if (pageNum < 1) pageNum = 1;
     if (limitNum < 1) limitNum = 10;
-    const tasks = taskService.getPaginated(pageNum, limitNum);
-    return res.json(tasks);
+    const result = taskService.getPaginated(pageNum, limitNum);
+    return res.json(result);
   }
 
   const tasks = taskService.getAll();

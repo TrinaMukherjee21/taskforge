@@ -57,7 +57,7 @@ describe('Tasks API Integration Tests', () => {
       expect(res.status).toBe(400);
     });
 
-      // BUG-7: express.json throws SyntaxError which results in 500 instead of 400
+      // BUG-6: express.json throws SyntaxError which results in 500 instead of 400
     it.failing('returns 400 for malformed JSON body', async () => {
       const res = await request(app)
         .post('/tasks')
@@ -108,19 +108,32 @@ describe('Tasks API Integration Tests', () => {
       
       const page1 = await request(app).get('/tasks?page=1&limit=2');
       expect(page1.status).toBe(200);
-      expect(page1.body).toHaveLength(2);
-      expect(page1.body[0].title).toBe('T1');
-      expect(page1.body[1].title).toBe('T2');
+      expect(page1.body.data).toHaveLength(2);
+      expect(page1.body.data[0].title).toBe('T1');
+      expect(page1.body.data[1].title).toBe('T2');
       
       const page2 = await request(app).get('/tasks?page=2&limit=2');
       expect(page2.status).toBe(200);
-      expect(page2.body).toHaveLength(2);
-      expect(page2.body[0].title).toBe('T3');
-      expect(page2.body[1].title).toBe('T4');
+      expect(page2.body.data).toHaveLength(2);
+      expect(page2.body.data[0].title).toBe('T3');
+      expect(page2.body.data[1].title).toBe('T4');
       
       const page4 = await request(app).get('/tasks?page=4&limit=2');
       expect(page4.status).toBe(200);
-      expect(page4.body).toHaveLength(0);
+      expect(page4.body.data).toHaveLength(0);
+    });
+
+    // Bonus: pagination metadata
+    it('paginated response includes metadata fields', async () => {
+      for (let i = 1; i <= 5; i++) {
+        taskService.create({ title: `T${i}` });
+      }
+      const res = await request(app).get('/tasks?page=1&limit=2');
+      expect(res.status).toBe(200);
+      expect(res.body.total).toBe(5);
+      expect(res.body.page).toBe(1);
+      expect(res.body.limit).toBe(2);
+      expect(res.body.totalPages).toBe(3);
     });
 
       // BUG-5: status filter returns early ignoring pagination parameters
@@ -153,6 +166,17 @@ describe('Tasks API Integration Tests', () => {
       expect(res.body.in_progress).toBe(0);
       expect(res.body.done).toBe(1);
       expect(res.body.overdue).toBe(1);
+    });
+
+    // Bonus: priority breakdown
+    it('returns byPriority breakdown in stats', async () => {
+      taskService.create({ title: 'T1', priority: 'low' });
+      taskService.create({ title: 'T2', priority: 'high' });
+      taskService.create({ title: 'T3', priority: 'high' });
+
+      const res = await request(app).get('/tasks/stats');
+      expect(res.status).toBe(200);
+      expect(res.body.byPriority).toEqual({ low: 1, medium: 0, high: 2 });
     });
   });
 

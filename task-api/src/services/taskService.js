@@ -10,22 +10,27 @@ const getByStatus = (status) => tasks.filter((t) => t.status.includes(status));
 
 const getPaginated = (page, limit) => {
   const offset = (page - 1) * limit;
-  return tasks.slice(offset, offset + limit);
+  const data = tasks.slice(offset, offset + limit);
+  const total = tasks.length;
+  const totalPages = Math.ceil(total / limit);
+  return { data, total, page, limit, totalPages };
 };
 
 const getStats = () => {
   const now = new Date();
   const counts = { todo: 0, in_progress: 0, done: 0 };
+  const byPriority = { low: 0, medium: 0, high: 0 };
   let overdue = 0;
 
   tasks.forEach((t) => {
     if (counts[t.status] !== undefined) counts[t.status]++;
+    if (byPriority[t.priority] !== undefined) byPriority[t.priority]++;
     if (t.dueDate && t.status !== 'done' && new Date(t.dueDate) < now) {
       overdue++;
     }
   });
 
-  return { ...counts, overdue };
+  return { ...counts, overdue, byPriority };
 };
 
 const create = ({ title, description = '', status = 'todo', priority = 'medium', dueDate = null }) => {

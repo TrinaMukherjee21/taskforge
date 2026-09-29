@@ -119,3 +119,11 @@ See [ASSIGNMENT.md](./ASSIGNMENT.md) for full submission requirements. At minimu
 - **Bug report** — what you found, where in the code, and why it's a bug (not just symptoms)
 - **At least one fix** — with a note on your approach
 - **`PATCH /tasks/:id/assign` implementation** — plus a short explanation of any design decisions (validation, edge cases, etc.)
+
+---
+
+## Dashboard (bonus)
+
+An optional demo UI added beyond the assignment's core scope is available. When running the server locally, simply navigate to `http://localhost:3000/` to view a static frontend dashboard that consumes the running API. It's built in plain HTML/CSS/JS without any build tools or frameworks.
+
+[Screenshot Placeholder: I will add the screenshot myself after deploying]

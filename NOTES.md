@@ -1,5 +1,17 @@
 # Notes & Design Decisions
 
+## Bonus Additions
+
+Two small enhancements added beyond the core assignment scope:
+
+1. **Pagination metadata** (`getPaginated`): The paginated `GET /tasks` response now returns `{ data, total, page, limit, totalPages }` instead of a bare array. The data is unchanged — this just wraps it with the context a client needs to build page controls (e.g. "showing page 2 of 5"). Without this, callers have to fire a separate count query or over-fetch to know how many pages exist.
+
+2. **Priority breakdown in stats** (`getStats`): The `GET /tasks/stats` response now includes a `byPriority: { low, medium, high }` count alongside the existing status counts and overdue count. Status breakdown alone is useful for workflow, but priority breakdown gives a fuller operational picture — e.g. how many high-priority items are still open.
+
+Both are additive and non-breaking for callers that only used the existing fields.
+
+---
+
 ## Test Coverage
 
 Run on 2026-09-29 with `npm run coverage` inside `task-api/`.
